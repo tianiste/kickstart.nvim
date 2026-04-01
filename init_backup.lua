@@ -167,9 +167,6 @@ vim.o.confirm = true
 -- [[ Basic Keymaps ]]
 --  See `:help vim.keymap.set()`
 
--- CHEATSHEET map
-vim.keymap.set('n', '<leader>ch', ':e ~/.config/nvim/CHEATSHEAT.md<CR>') -- cheat sheet
-
 -- Clear highlights on search when pressing <Esc> in normal mode
 --  See `:help hlsearch`
 vim.keymap.set('n', '<Esc>', '<cmd>nohlsearch<CR>')
@@ -257,12 +254,8 @@ rtp:prepend(lazypath)
 --    :Lazy update
 --
 -- NOTE: Here is where you install your plugins.
---
--- Theme
-vim.opt.termguicolors = true
 require('lazy').setup({
   -- NOTE: Plugins can be added via a link or github org/name. To run setup automatically, use `opts = {}`
-  { 'bluz71/vim-moonfly-colors', name = 'moonfly', lazy = false, priority = 1000 },
   { 'NMAC427/guess-indent.nvim', opts = {} },
 
   -- Alternatively, use `config = function() ... end` for full control over the configuration.
@@ -373,44 +366,12 @@ require('lazy').setup({
         'hrsh7th/nvim-cmp',
       },
 
-      { -- Easy commenting
-        'numToStr/Comment.nvim',
-        opts = {},
-      },
-      { -- Auto pairs (brackets, quotes)
-        'windwp/nvim-autopairs',
-        event = 'InsertEnter',
-        opts = {},
-      },
-
       -- Git
       {
         'tpope/vim-fugitive',
       },
       -- Useful for getting pretty icons, but requires a Nerd Font.
       { 'nvim-tree/nvim-web-devicons', enabled = vim.g.have_nerd_font },
-
-      {
-        'nvim-neo-tree/neo-tree.nvim',
-        branch = 'v3.x',
-        dependencies = {
-          'nvim-lua/plenary.nvim',
-          'nvim-tree/nvim-web-devicons',
-          'MunifTanjim/nui.nvim',
-        },
-        config = function()
-          require('neo-tree').setup {
-            filesystem = {
-              filtered_items = {
-                hide_dotfiles = false,
-              },
-            },
-          }
-
-          -- Keymap: toggle file explorer
-          vim.keymap.set('n', '<leader>e', ':Neotree toggle<CR>')
-        end,
-      },
     },
     config = function()
       -- Telescope is a fuzzy finder that comes with a lot of different things that
@@ -651,15 +612,15 @@ require('lazy').setup({
       ---@type table<string, vim.lsp.Config>
       local servers = {
         -- clangd = {},
-        gopls = {},
-        pyright = {},
-        rust_analyzer = {},
+        -- gopls = {},
+        -- pyright = {},
+        -- rust_analyzer = {},
         --
         -- Some languages (like typescript) have entire language plugins that can be useful:
         --    https://github.com/pmizio/typescript-tools.nvim
         --
         -- But for many setups, the LSP (`ts_ls`) will work just fine
-        ts_ls = {},
+        -- ts_ls = {},
 
         stylua = {}, -- Used to format Lua code
 
@@ -702,10 +663,7 @@ require('lazy').setup({
       -- You can press `g?` for help in this menu.
       local ensure_installed = vim.tbl_keys(servers or {})
       vim.list_extend(ensure_installed, {
-        'stylua',
-        'gopls',
-        'pyright',
-        'ts_ls',
+        -- You can add other tools here that you want Mason to install
       })
 
       require('mason-tool-installer').setup { ensure_installed = ensure_installed }
@@ -776,6 +734,8 @@ require('lazy').setup({
         end)(),
         dependencies = {
           -- `friendly-snippets` contains a variety of premade snippets.
+          --    See the README about individual language/framework/plugin snippets:
+          --    https://github.com/rafamadriz/friendly-snippets
           -- {
           --   'rafamadriz/friendly-snippets',
           --   config = function()
@@ -790,20 +750,43 @@ require('lazy').setup({
     ---@type blink.cmp.Config
     opts = {
       keymap = {
-        preset = 'enter', -- Changed: pressing Enter accepts the completion
+        -- 'default' (recommended) for mappings similar to built-in completions
+        --   <c-y> to accept ([y]es) the completion.
+        --    This will auto-import if your LSP supports it.
+        --    This will expand snippets if the LSP sent a snippet.
+        -- 'super-tab' for tab to accept
+        -- 'enter' for enter to accept
+        -- 'none' for no mappings
+        --
+        -- For an understanding of why the 'default' preset is recommended,
+        -- you will need to read `:help ins-completion`
+        --
+        -- No, but seriously. Please read `:help ins-completion`, it is really good!
+        --
+        -- All presets have the following mappings:
+        -- <tab>/<s-tab>: move to right/left of your snippet expansion
+        -- <c-space>: Open menu or open docs if already open
+        -- <c-n>/<c-p> or <up>/<down>: Select next/previous item
+        -- <c-e>: Hide menu
+        -- <c-k>: Toggle signature help
+        --
+        -- See :h blink-cmp-config-keymap for defining your own keymap
+        preset = 'default',
+
+        -- For more advanced Luasnip keymaps (e.g. selecting choice nodes, expansion) see:
+        --    https://github.com/L3MON4D3/LuaSnip?tab=readme-ov-file#keymaps
       },
 
       appearance = {
+        -- 'mono' (default) for 'Nerd Font Mono' or 'normal' for 'Nerd Font'
+        -- Adjusts spacing to ensure icons are aligned
         nerd_font_variant = 'mono',
       },
 
       completion = {
+        -- By default, you may press `<c-space>` to show the documentation.
+        -- Optionally, set `auto_show = true` to show the documentation after a delay.
         documentation = { auto_show = false, auto_show_delay_ms = 500 },
-        list = {
-          selection = {
-            preselect = true, -- Added: first suggestion is selected so Enter can accept it
-          },
-        },
       },
 
       sources = {
@@ -811,10 +794,21 @@ require('lazy').setup({
       },
 
       snippets = { preset = 'luasnip' },
+
+      -- Blink.cmp includes an optional, recommended rust fuzzy matcher,
+      -- which automatically downloads a prebuilt binary when enabled.
+      --
+      -- By default, we use the Lua implementation instead, but you may enable
+      -- the rust implementation via `'prefer_rust_with_warning'`
+      --
+      -- See :h blink-cmp-config-fuzzy for more information
       fuzzy = { implementation = 'lua' },
+
+      -- Shows a signature help window while you type arguments for a function
       signature = { enabled = true },
     },
   },
+
   { -- You can easily change to a different colorscheme.
     -- Change the name of the colorscheme plugin below, and then
     -- change the command in the config to whatever the name of that colorscheme is.
@@ -833,7 +827,7 @@ require('lazy').setup({
       -- Load the colorscheme here.
       -- Like many other themes, this one has different styles, and you could load
       -- any other, such as 'tokyonight-storm', 'tokyonight-moon', or 'tokyonight-day'.
-      vim.cmd.colorscheme 'moonfly'
+      vim.cmd.colorscheme 'tokyonight-night'
     end,
   },
 
